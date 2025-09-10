@@ -1,3 +1,4 @@
+<!-- BEGIN MOBILE-FRIENDLY VERSION (same logic, mobile optimized) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +11,7 @@
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #fdf9f6;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -25,18 +27,23 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-screen input, .auth-screen button {
+      width: 90%;
+      max-width: 400px;
+      font-size: 1rem;
     }
 
     .auth-screen input {
       padding: 10px;
       margin-top: 10px;
-      font-size: 1rem;
     }
 
     .auth-screen button {
       margin-top: 10px;
       padding: 10px 20px;
-      font-size: 1rem;
       cursor: pointer;
       background-color: #6a4e42;
       color: #fff;
@@ -46,7 +53,13 @@
 
     #map {
       display: none;
-      height: 75vh;
+      height: 70vh;
+      width: 100%;
+    }
+
+    .leaflet-popup-content {
+      max-height: 250px;
+      overflow-y: auto;
     }
 
     .leaflet-popup-content img {
@@ -77,14 +90,14 @@
     }
 
     .fullscreen-img img {
-      max-width: 90%;
-      max-height: 90%;
+      max-width: 95vw;
+      max-height: 95vh;
       border-radius: 10px;
     }
 
     .timeline-container {
       display: none;
-      position: relative;
+      flex-direction: column;
       height: 100px;
       background: #fff8f1;
       align-items: center;
@@ -98,6 +111,7 @@
       width: 90%;
       height: 4px;
       background: #d8c7be;
+      margin-top: 10px;
     }
 
     .timeline-progress {
@@ -113,23 +127,33 @@
     .timeline-pin {
       position: absolute;
       top: -6px;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       background: #6a4e42;
       border-radius: 50%;
       cursor: pointer;
     }
 
     .play-button {
-      position: absolute;
-      right: 20px;
-      top: 10px;
       background: #6a4e42;
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 6px 14px;
       border-radius: 4px;
       cursor: pointer;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .play-button {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+      }
+
+      .timeline-pin {
+        width: 10px;
+        height: 10px;
+      }
     }
   </style>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -145,10 +169,10 @@
 <h1 id="title" style="display:none;">Our Memory Map</h1>
 <div id="map"></div>
 <div class="timeline-container" id="timelineContainer">
+  <button class="play-button" id="playPause">▶️</button>
   <div class="timeline-bar" id="timelineBar">
     <div class="timeline-progress" id="timelineProgress"></div>
   </div>
-  <button class="play-button" id="playPause">▶️</button>
 </div>
 
 <div class="fullscreen-img" id="fullscreen" onclick="hideFullscreen()">
@@ -222,7 +246,6 @@
 
   function drawTimeline() {
     const bar = document.getElementById("timelineBar");
-    const progress = document.getElementById("timelineProgress");
     const total = memories.length;
 
     memories.forEach((mem, i) => {
@@ -242,8 +265,8 @@
     L.popup()
       .setLatLng(m.coords)
       .setContent(
-        m.imgs.map(img => `<img src="${img}" onclick="showFullscreen('${img}')"/>`).join('')
-        + `<p>${m.title}</p><small>${m.date}</small>`
+        m.imgs.map(img => `<img src="${img}" onclick="showFullscreen('${img}')"/>`).join('') +
+        `<p>${m.title}</p><small>${m.date}</small>`
       )
       .openOn(map);
     updateProgress();
@@ -291,3 +314,4 @@
 
 </body>
 </html>
+<!-- END OF FILE -->
