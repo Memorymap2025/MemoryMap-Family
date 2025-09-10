@@ -3,34 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Our Memory Map</title>
+  <title>Memory Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #fdf9f6;
-      color: #333;
     }
+
     h1 {
       text-align: center;
       padding: 20px 0;
       font-size: 2em;
       color: #6a4e42;
     }
+
     .auth-screen {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background-color: #fdf9f6;
     }
+
     .auth-screen input {
       padding: 10px;
       margin-top: 10px;
       font-size: 1rem;
     }
+
     .auth-screen button {
       margin-top: 10px;
       padding: 10px 20px;
@@ -41,116 +43,251 @@
       border: none;
       border-radius: 4px;
     }
+
     #map {
       display: none;
-      height: 90vh;
+      height: 75vh;
     }
+
     .leaflet-popup-content img {
       width: 100%;
       border-radius: 6px;
       margin-bottom: 10px;
       cursor: pointer;
     }
+
     .leaflet-popup-content p {
-      margin: 8px 0 0;
+      margin: 4px 0 0;
       font-weight: 500;
     }
+
+    .leaflet-popup-content small {
+      color: #888;
+    }
+
     .fullscreen-img {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.9);
       justify-content: center;
       align-items: center;
       z-index: 9999;
     }
+
     .fullscreen-img img {
       max-width: 90%;
       max-height: 90%;
       border-radius: 10px;
     }
+
+    .timeline-container {
+      display: none;
+      position: relative;
+      height: 100px;
+      background: #fff8f1;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-top: 2px solid #e0d4cc;
+    }
+
+    .timeline-bar {
+      position: relative;
+      width: 90%;
+      height: 4px;
+      background: #d8c7be;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: #6a4e42;
+      transition: width 0.3s linear;
+    }
+
+    .timeline-pin {
+      position: absolute;
+      top: -6px;
+      width: 14px;
+      height: 14px;
+      background: #6a4e42;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .play-button {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      background: #6a4e42;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   </style>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-  <div class="auth-screen" id="auth">
-    <h1>🔐 Enter your memory map password</h1>
-    <input type="password" id="password" placeholder="Enter password" />
-    <button onclick="checkPassword()">Unlock</button>
+
+<div class="auth-screen" id="auth">
+  <h1>🔐 Enter Your Password</h1>
+  <input type="password" id="password" placeholder="Enter password..." />
+  <button onclick="checkPassword()">Unlock</button>
+</div>
+
+<h1 id="title" style="display:none;">Our Memory Map</h1>
+<div id="map"></div>
+<div class="timeline-container" id="timelineContainer">
+  <div class="timeline-bar" id="timelineBar">
+    <div class="timeline-progress" id="timelineProgress"></div>
   </div>
+  <button class="play-button" id="playPause">▶️</button>
+</div>
 
-  <h1 id="title" style="display:none;">Our Memory Map</h1>
-  <div id="map"></div>
+<div class="fullscreen-img" id="fullscreen" onclick="hideFullscreen()">
+  <img id="fullscreenImg" src="" />
+</div>
 
-  <div class="fullscreen-img" id="fullscreen" onclick="hideFullscreen()">
-    <img id="fullscreenImg" src="" alt="Fullscreen View" />
-  </div>
+<script>
+  const CORRECT_PASSWORD = "1709";
 
-  <script>
-    const CORRECT_PASSWORD = "1709";
-
-    function checkPassword() {
-      const input = document.getElementById("password").value;
-      if (input === CORRECT_PASSWORD) {
-        document.getElementById("auth").style.display = "none";
-        document.getElementById("map").style.display = "block";
-        document.getElementById("title").style.display = "block";
-        initMap();
-      } else {
-        alert("Wrong password. Please try again.");
-      }
+  function checkPassword() {
+    const input = document.getElementById("password").value;
+    if (input === CORRECT_PASSWORD) {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("map").style.display = "block";
+      document.getElementById("title").style.display = "block";
+      document.getElementById("timelineContainer").style.display = "flex";
+      initMap();
+    } else {
+      alert("Wrong password. Try again.");
     }
+  }
 
-    function showFullscreen(src) {
-      const full = document.getElementById("fullscreen");
-      const img = document.getElementById("fullscreenImg");
-      img.src = src;
-      full.style.display = "flex";
+  const memories = [
+    {
+      coords: [34.66, 33.01],
+      title: 'Lake – Cyprus',
+      date: '2023-05-10',
+      imgs: ['photos/Cyprus lake.jpeg']
+    },
+    {
+      coords: [33.9464, 35.6097],
+      title: 'Rio Lento – Nahr el Kaleb',
+      date: '2023-06-04',
+      imgs: ['photos/Rio Lento.jpeg']
+    },
+    {
+      coords: [34.2096, 35.8779],
+      title: 'Grandma Dinner – Tannourine',
+      date: '2023-07-20',
+      imgs: ['photos/grandma tannourine.jpeg']
+    },
+    {
+      coords: [33.9803, 35.6529],
+      title: 'Visit – Harissa',
+      date: '2023-08-12',
+      imgs: ['photos/Harissa visit.jpeg']
     }
+  ];
 
-    function hideFullscreen() {
-      document.getElementById("fullscreen").style.display = "none";
-    }
+  let map;
+  let currentIndex = 0;
+  let interval;
+  let isPlaying = false;
 
-    function initMap() {
-      const map = L.map('map').setView([33.8938, 35.5018], 8);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+  function initMap() {
+    map = L.map('map').setView([34, 35], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-      const memories = [
-        {
-          coords: [34.66, 33.01],
-          title: 'Lake – Cyprus',
-          imgs: ['photos/Cyprus lake.jpeg']
-        },
-		{
-          coords: [33.9464, 35.6097],
-          title: 'Rio lento – Nahr el kaleb',
-          imgs: ['photos/Rio Lento.jpeg']
-        },
-		{
-          coords: [34.2096, 35.8779],
-          title: 'Grandma dinner – Tannourine',
-          imgs: ['photos/grandma tannourine.jpeg']
-        },
-		{
-          coords: [33.9803, 35.6529],
-          title: 'Visit – Harissa',
-          imgs: ['photos/Harissa visit.jpeg']
+    memories.forEach(memory => {
+      const imgHtml = memory.imgs.map(
+        img => `<img src="${img}" onclick="showFullscreen('${img}')"/>`
+      ).join('');
+      const popup = `${imgHtml}<p>${memory.title}</p><small>${memory.date}</small>`;
+      L.marker(memory.coords).addTo(map).bindPopup(popup);
+    });
+
+    drawTimeline();
+  }
+
+  function drawTimeline() {
+    const bar = document.getElementById("timelineBar");
+    const progress = document.getElementById("timelineProgress");
+    const total = memories.length;
+
+    memories.forEach((mem, i) => {
+      const left = (i / (total - 1)) * 100;
+      const pin = document.createElement("div");
+      pin.classList.add("timeline-pin");
+      pin.style.left = `${left}%`;
+      pin.onclick = () => jumpTo(i);
+      bar.appendChild(pin);
+    });
+  }
+
+  function jumpTo(index) {
+    currentIndex = index;
+    const m = memories[index];
+    map.setView(m.coords, 12);
+    L.popup()
+      .setLatLng(m.coords)
+      .setContent(
+        m.imgs.map(img => `<img src="${img}" onclick="showFullscreen('${img}')"/>`).join('')
+        + `<p>${m.title}</p><small>${m.date}</small>`
+      )
+      .openOn(map);
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const percent = (currentIndex / (memories.length - 1)) * 100;
+    document.getElementById("timelineProgress").style.width = `${percent}%`;
+  }
+
+  function togglePlayPause() {
+    const button = document.getElementById("playPause");
+    if (isPlaying) {
+      clearInterval(interval);
+      button.textContent = "▶️";
+    } else {
+      interval = setInterval(() => {
+        jumpTo(currentIndex);
+        currentIndex++;
+        if (currentIndex >= memories.length) {
+          clearInterval(interval);
+          isPlaying = false;
+          button.textContent = "▶️";
+          return;
         }
-      ];
-
-      memories.forEach(memory => {
-        const imagesHTML = memory.imgs.map(img => `<img src="${img}" alt="${memory.title}" onclick="showFullscreen('${img}')" />`).join('');
-        L.marker(memory.coords).addTo(map).bindPopup(
-          `${imagesHTML}<p>${memory.title}</p>`
-        );
-      });
+      }, 2000);
+      button.textContent = "⏸️";
     }
-  </script>
+    isPlaying = !isPlaying;
+  }
+
+  function showFullscreen(src) {
+    const viewer = document.getElementById("fullscreen");
+    const img = document.getElementById("fullscreenImg");
+    img.src = src;
+    viewer.style.display = "flex";
+  }
+
+  function hideFullscreen() {
+    document.getElementById("fullscreen").style.display = "none";
+  }
+
+  document.getElementById("playPause").onclick = togglePlayPause;
+</script>
+
 </body>
 </html>
